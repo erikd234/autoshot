@@ -23,6 +23,7 @@ import time
 import os
 import glob
 from PIL import Image
+import subprocess
 
 def clean_up_pngs(folder_path):
     # Clean up the png files created.
@@ -30,7 +31,16 @@ def clean_up_pngs(folder_path):
         os.remove(file_path)
 
 
-def combined_pngs_to_pdf(folder_path):
+def compress_pngs(folder_path):
+    os.chdir(folder_path)
+    subprocess.run(["mogrify", "-resize", "1024x1024", "-quality", "75", "*.png"])
+    os.chdir("..")
+
+
+def combine_pngs_to_pdf(folder_path, pdf_name):
+    # We need to compress images, since by default screen shots will be
+    # too large for many pngs
+    compress_pngs(folder_path)
     # List of PNG files in the folder
     png_files = [f for f in os.listdir(folder_path) if f.endswith(".png")]
 
@@ -46,6 +56,7 @@ def combined_pngs_to_pdf(folder_path):
     # Save the images as a single PDF
     pdf_path = os.path.join(folder_path, f"{pdf_name}.pdf")
     images[0].save(pdf_path, save_all=True, append_images=images[1:])
+
 
 if __name__ == "__main__":
     sleep_dur = 5  # seconds
@@ -71,10 +82,11 @@ if __name__ == "__main__":
             print("Interrupted by user")
             print("combine any screenshots taken")
             folder_path = f"./{folder_name}"
-            combined_pngs_to_pdf(folder_path)
+            combine_pngs_to_pdf(folder_path, pdf_name)
             clean_up_pngs(folder_path)
-            break
+            print("finished...")
+            exit()
 
     folder_path = f"./{folder_name}"
-    combined_pngs_to_pdf(folder_path)
+    combine_pngs_to_pdf(folder_path, pdf_name)
     clean_up_pngs(folder_path)
