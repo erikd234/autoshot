@@ -22,7 +22,7 @@ import pyscreenshot as ImageGrab
 import time
 import os
 import glob
-from PIL import Image
+from PIL import Image, ImageFile
 import subprocess
 
 def clean_up_pngs(folder_path):
@@ -51,14 +51,18 @@ def combine_pngs_to_pdf(folder_path, pdf_name):
     images = []
     for png_file in png_files:
         file_path = os.path.join(folder_path, png_file)
-        image = Image.open(file_path)
-        images.append(image.convert("RGB"))
+        try:
+            image = Image.open(file_path)
+            images.append(image.convert("RGB"))
+        except OSError as error:
+            print(f"{error}: {file_path}")
     # Save the images as a single PDF
     pdf_path = os.path.join(folder_path, f"{pdf_name}.pdf")
     images[0].save(pdf_path, save_all=True, append_images=images[1:])
 
 
 if __name__ == "__main__":
+    ImageFile.LOAD_TRUNCATED_IMAGES = True
     sleep_dur = 5  # seconds
     print("Name of folder to save screenshot.")
     folder_name = str(input("Enter Folder Name: "))
